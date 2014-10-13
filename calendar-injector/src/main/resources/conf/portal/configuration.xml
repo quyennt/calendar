@@ -65,7 +65,16 @@
         <value-param>
           <name>rand</name> <!-- randomize or not -->
           <value>true</value>
+        </value-param>        
+        <value-param>
+          <name>date</name> <!-- date - MM/dd/yyyy -->
+          <value>10/09/2014</value>
         </value-param>
+        <value-param>
+          <name>tqaCustomize</name> <!-- true/false -->
+          <value>false</value>
+        </value-param>                
+        
       </init-params>
     </component-plugin>
   </external-component-plugins>
