@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.TimeZone;
 
 import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarEvent;
@@ -98,6 +97,8 @@ public class CalendarDataInjector extends DataInjector {
 
   private String 	 			 date				= EMPTY;
   
+  private int 					 eventNumber		= 1;
+  
   private static final String DEFAULT_LOCATION = "VNM";
   final private static String DEFAULT_EVENTCATEGORY_ID_ALL = "defaultEventCategoryIdAll";
 
@@ -162,9 +163,7 @@ public class CalendarDataInjector extends DataInjector {
     maxTasks = getParam(initParams, "mTa", maxTasks);
     baseURL = getParam(initParams, "baseURL", baseURL);
     typeOfInject = getParam(initParams, "typeOfInject", typeOfInject);
-    randomize = getParam(initParams, "rand");
-    tqaCustomize = getParam(initParams, "tqaCustomize", tqaCustomize);
-    date = getParam(initParams, "date", date);
+    randomize = getParam(initParams, "rand"); 
   }
 
 //  @Override
@@ -187,16 +186,32 @@ public class CalendarDataInjector extends DataInjector {
   public void inject(HashMap<String, String> queryParams) throws Exception {
     log.info("Start inject datas for calendar....");    
     setHistoryInject();
-    //Implement as VN TQA's requirements    
+    //Implement as VN TQA's requirements     
     Object paramCumtomize = queryParams.get("tqaCustomize");
     Object paramDate = queryParams.get("date");
-    tqaCustomize = paramCumtomize.toString().trim();    
-    date = paramDate.toString().trim();
+    if(paramCumtomize!=null){
+    	tqaCustomize = paramCumtomize.toString().trim();
+    }
+    if(paramDate!=null){
+    	date = paramDate.toString().trim();
+    }
         
     if("true".equals(tqaCustomize)){
-    	injectCustomize();
-    	log.info("tqaCustomize = true");
-    } else {//end tqa customize
+    	boolean validDate = true;
+        SimpleDateFormat dateFormater = new SimpleDateFormat ("MM/dd/yyyy"); 
+        try{
+        	dateFormater.parse(date);        	
+        } catch(ParseException e){        
+        	validDate = false;
+        	log.error("Wrong input date");
+        	e.printStackTrace();
+        }  
+        if(validDate){
+        	injectCustomize();
+        	log.info("tqaCustomize done");
+        }
+    } else if(("false".equals(tqaCustomize))|| (EMPTY.equals(tqaCustomize)) || (null == tqaCustomize)){//end tqa customize
+    	log.info("Defaul injection");
 	    if ("all".equals(typeOfInject)) {
 	      if (currentUser.length() > 0) {
 	        initPrivateCalendar();
@@ -207,12 +222,15 @@ public class CalendarDataInjector extends DataInjector {
 	    } else if (currentUser.length() > 0) {
 	      initPrivateCalendar();
 	    }
+    } else {
+    	log.info("Nothing injected");
     }
   }
   
   //Inject as VN TQA's requirements
-  private void injectCustomize() throws Exception{
+  private void injectCustomize() throws Exception{	  
 	  initPrivateCalendarCustomize();
+	  eventNumber++;
   }
   
   private void removePrivateData() throws Exception {
@@ -355,72 +373,30 @@ public class CalendarDataInjector extends DataInjector {
   }
 
   private void initPrivateCalendarCustomize() throws Exception {
-	    log.info("Inject private datas customize....");
-    	
+	    log.info("Inject private datas customize....");    	
 	    // save setting
 	    try {	      
-//	      setting = calService.getCalendarSetting(currentUser);
-	      setting = newCalendarSetting();
-	      calService.saveCalendarSetting(currentUser, setting);	      
+	      setting = calService.getCalendarSetting(currentUser);	      	      
 	    } catch (Exception e) {
+	    	setting = newCalendarSetting();
+		    calService.saveCalendarSetting(currentUser, setting);	    	
 	    	e.printStackTrace();
 	    }
-//	    long t = System.currentTimeMillis(), t1 = t;
-//
-//	    t = System.currentTimeMillis();
-//	    // save EventCategoy
-//	    List<EventCategory> eventCategories = findEventCategorys();
-//	    for (EventCategory evCat : eventCategories) {
-//	      calService.saveEventCategory(currentUser, evCat, true);
-//	      eventCategory.add(evCat);
-//	      eventCategorys.add(evCat.getId());
-//	    }
-//	    log.info(String.format("Saved %s eventCategories in %sms", eventCategories.size(), (System.currentTimeMillis() - t)));
-//	    // save calendar
-//	    List<Calendar> calendars = findCalendars(true);
-//	    List<CalendarEvent> events;
-//	    int index = 0, size = calendars.size(), evsCal, evs = 0, tas = 0;
-//	    for (Calendar calendar : calendars) {
-//	    	log.info("calendar.getId()" + calendar.getId());
-//	    	log.info("calendar.getName()" + calendar.getName());
-//	    	log.info("calendar.getDescription()" + calendar.getDescription());
-//	    	log.info("--------------------------------------------");
-//	      t = System.currentTimeMillis();
-//	      calService.saveUserCalendar(currentUser, calendar, true);
-//	      privateCalendar.add(calendar.getId());
-	      // save Event
+	    // save Event
 	    String defaultCalendarId = Utils.getDefaultCalendarId(currentUser);
 	    Calendar defaultCalendar = calService.getCalendarById(defaultCalendarId);
-	    log.info("defaultCalendar.getId()" + defaultCalendar.getId());
-    	log.info("defaultCalendar.getName()" + defaultCalendar.getName());
-    	log.info("defaultCalendar.getDescription()" + defaultCalendar.getDescription());
-    	    	
-//    	EventCategory defaultEventCategoryAll = calService.getEventCategory(currentUser, DEFAULT_EVENTCATEGORY_ID_ALL);
-//    	log.info("evCat.getId()" + defaultEventCategoryAll.getId());
-//    	log.info("evCat.getName()" + defaultEventCategoryAll.getName());    		 
-  	    
-    	CalendarEvent event = newCalendarEventCustomize(defaultCalendar.getId(), "0",
-    													CalendarEvent.TYPE_EVENT, false);
+   	    
+    	CalendarEvent event = newCalendarEventCustomize(defaultCalendar.getId(), "0", CalendarEvent.TYPE_EVENT, false);
     	
-    	 calService.saveUserEvent(currentUser, defaultCalendar.getId(), event, true);
-//	      events = findCalendarEvent(calendar.getId(), "0", CalendarEvent.TYPE_EVENT, false);
-//	      for (CalendarEvent event : events) {
-//	        calService.saveUserEvent(currentUser, calendar.getId(), event, true);
-//	      }
-//	      evsCal = events.size();
-//	      evs += evsCal;
-//	      // save Task
-//	      events = findCalendarEvent(calendar.getId(), "0", CalendarEvent.TYPE_TASK, false);
-//	      tas += events.size();
-//	      for (CalendarEvent event : events) {
-//	        calService.saveUserEvent(currentUser, calendar.getId(), event, true);
-//	      }
-//	      log.info(String.format("Saved Calendar %s/%s with %s Events and %s Tasks in %sms",
-//	                             (++index), size, evsCal, events.size(), (System.currentTimeMillis()) - t));
-//	    }
-//	    log.info(String.format("INITIALIZED EventCategorys=%s / Calendars=%s / Events=%s / Tasks=%s in %sms",
-//	                           eventCategories.size(), calendars.size(), evs, tas, (System.currentTimeMillis() - t1)));
-	    saveHistoryInject();
+    	calService.saveUserEvent(currentUser, defaultCalendar.getId(), event, true);
+    	 
+    	//Save task
+    	event = newCalendarEventCustomize(defaultCalendar.getId(), "0", CalendarEvent.TYPE_TASK, false);
+
+    	calService.saveUserEvent(currentUser, defaultCalendar.getId(), event, true);    	 
+
+    	//save history inject
+    	saveHistoryInject();
 	  }  
   
   private List<EventCategory> findEventCategorys() throws Exception {
@@ -550,7 +526,6 @@ public class CalendarDataInjector extends DataInjector {
 	    CalendarEvent categoryEvent = new CalendarEvent();
 	    categoryEvent.setCalendarId(calendarId);
 	    categoryEvent.setCalType(CalType);
-//	    categoryEvent.setDescription(randomWords(20));
 	    categoryEvent.setDescription(currentUser + " Event");
 	    if (!isPublic) {
 //	      EventCategory eventCategory = randomEventCategory();
@@ -569,48 +544,28 @@ public class CalendarDataInjector extends DataInjector {
 	    }
 	    categoryEvent.setEventState(randomState());
 	    categoryEvent.setEventType(type);
-	    
-//	    long time = randomDateTime(rand.nextInt(365), 0);
-//	    categoryEvent.setFromDateTime(getTime(time));
-//	    time = randomDateTime(rand.nextInt(5), time);
-//	    categoryEvent.setToDateTime(getTime(time));
-	    
-	    String[] s = date.split("/");
-	    int month = Integer.parseInt(s[0]);
-	    int dayOfMonth = Integer.parseInt(s[1]);
-	    int year = Integer.parseInt(s[2]);
-	    
-//	    java.util.Calendar calendar = new GregorianCalendar();
-//	    calendar.set(java.util.Calendar.AM_PM, java.util.Calendar.AM_PM);
-//	    calendar.set(java.util.Calendar.MONTH, (month -1));
-//	    calendar.set(java.util.Calendar.DAY_OF_MONTH, dayOfMonth);
-//	    calendar.set(java.util.Calendar.YEAR, year);
-//	    calendar.set(java.util.Calendar.HOUR_OF_DAY, 10);
-//	    calendar.set(java.util.Calendar.MINUTE, 10);
-//	    log.info("Default timezone=" + calendar.getTimeZone());
-	    
+	    	    	    
 	    SimpleDateFormat dateFormater = new SimpleDateFormat ("MM/dd/yyyy HH:mm"); 
 	    Date fromTime = new Date(); 
 	    Date toTime = new Date(); 
 	    int randomTime = getRandomNumberFrom(8, 17); 
 		try {
-			fromTime = dateFormater.parse(date + " "+ randomTime);
-			toTime = dateFormater.parse(date + " "+ randomTime +":30");
+			fromTime = dateFormater.parse(date + " "+ randomTime + ":00");			
+			if(type == CalendarEvent.TYPE_TASK){
+				toTime = dateFormater.parse(date + " "+ randomTime +":45");
+			} else {
+				toTime = dateFormater.parse(date + " "+ randomTime +":30");
+			}
 		} catch (ParseException e) {
 			// TODO Auto-generated catch block
 			log.error("Input wrong date");
 			e.printStackTrace();			
 		}
-//		categoryEvent.setFromDateTime(calendar.getTime());
-//		calendar.set(java.util.Calendar.MINUTE, 40);
-//	    categoryEvent.setToDateTime(calendar.getTime());
 		
 		categoryEvent.setFromDateTime(fromTime);
-//		calendar.set(java.util.Calendar.MINUTE, 40);
 	    categoryEvent.setToDateTime(toTime);
 
 	    categoryEvent.setLocation(DEFAULT_LOCATION);	    
-//	    categoryEvent.setMessage(randomWords(30));
 	    categoryEvent.setMessage(currentUser + " Event");
 
 	    categoryEvent.setInvitation(new String[] { EMPTY });
@@ -620,11 +575,15 @@ public class CalendarDataInjector extends DataInjector {
 	    categoryEvent.setSendOption(CalendarSetting.ACTION_NEVER);
 	    categoryEvent.setStatus(EMPTY);
 	    categoryEvent.setTaskDelegator(EMPTY);
-	    categoryEvent.setRepeatType(CalendarEvent.REPEATTYPES[rand.nextInt(CalendarEvent.REPEATTYPES.length)]);
+//	    categoryEvent.setRepeatType(CalendarEvent.REPEATTYPES[rand.nextInt(CalendarEvent.REPEATTYPES.length)]);
+	    categoryEvent.setRepeatType(CalendarEvent.RP_NOREPEAT);
 
-//	    categoryEvent.setSummary(calRandomWords(5));
 	    //Event title
-	    categoryEvent.setSummary(currentUser + "_Event_");
+	    if(type == CalendarEvent.TYPE_TASK){
+	    	categoryEvent.setSummary(currentUser + "_Task_" + eventNumber);
+	    } else {
+	    	categoryEvent.setSummary(currentUser + "_Event_" + eventNumber);
+	    }
 	    categoryEvent.setPrivate(!isPublic);
 	    return categoryEvent;
 	  }  

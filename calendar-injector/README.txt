@@ -1,6 +1,13 @@
-How to inject:
-	localhost:8080/rest/bench/inject/CalendarDataInjector?mCt=1&mEcat=2&mCal=1&mEv=1&mTa=2&typeOfInject=private&rand=false&date=10/10/2014
-	localhost:8080/rest/bench/reject/CalendarDataInjector?mCt=10&mEcat=1&mCal=1&mEv=10&mTa=1&typeOfInject=all&rand=false
-	
-	/bench/inject/CalendarDataInjector?mCt=5&mEcat=10&mCal=10&mEv=20&mTa=20&typeOfInject=private&rand=false&date=10/10/2014
-	localhost:8080/rest/bench/inject/CalendarDataInjector?date=10/10/2014&tqaCustomize=true
+A. What's in injector:
+	There are 2 parts in this injector:
+	1. Default injection:
+		- All parameters are defined in "configuration.xml" file.
+		- Calendars, Events, Tasks are injected randomly. 
+	2. Injection customize by TQA: 
+		- All parameters are get from URL.	
+		- Events & Tasks are injected into specific calendars with specific date.
+B. How to inject:
+		1. To use default injection:
+				host:port/rest/bench/inject/CalendarDataInjector
+		2. To use injection customized by TQA:
+				host:port/rest/bench/inject/CalendarDataInjector?tqaCustomize=true&date=MM/dd/yyyy
