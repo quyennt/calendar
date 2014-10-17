@@ -109,9 +109,7 @@ public class CalendarDataInjector extends DataInjector {
   private String 				 publicCalendarName  = EMPTY;
     
   private String				 injectedUser		 = EMPTY;
-  
-  private int					 injectPublicNumber	 = 1; //number of events injected to public calendar
-  
+     
   private boolean				 createPublicCalendar= false;
   
   private int 					 eventNumber		= 1;
@@ -234,7 +232,6 @@ public class CalendarDataInjector extends DataInjector {
 	    Object paramMode = queryParams.get("injectMode");
 	    Object paramPublicCalendar = queryParams.get("publicCalendarName");
 	    Object paramInjectedUser = queryParams.get("injectedUser");
-	    Object paramInjectNumber = queryParams.get("injectPublicNumber");
 	    Object paramCreatePublicCalendar = queryParams.get("createPublicCalendar");
 	    
 	    if(paramCumtomize != null){
@@ -258,10 +255,6 @@ public class CalendarDataInjector extends DataInjector {
 		    	injectedUser = paramInjectedUser.toString().trim();
 		    }
 		    
-		    if(paramInjectNumber != null){
-		    	injectPublicNumber = Integer.parseInt(paramInjectNumber.toString().trim());		    
-		    }
-		     		    
 		    if(paramCreatePublicCalendar != null){
 		    	createPublicCalendar = Boolean.parseBoolean(paramCreatePublicCalendar.toString().trim());
 		    }		    
@@ -319,13 +312,11 @@ public class CalendarDataInjector extends DataInjector {
 		  initPrivateCalendarCustomize();
 		  log.info("Inject private events customize done!");
 		  //Inject events into public calendars
-	  } else if(validUser && validDate && injectMode.equals("public") && !publicCalendarName.equals(EMPTY) 
-			  											&& injectPublicNumber > 0){
+	  } else if(validUser && validDate && injectMode.equals("public") && !publicCalendarName.equals(EMPTY)){
 		  insertEventToPublicCalendar();
 		  log.info("Inject public events customize done");
 		  //Inject event to both private & public calendars
-	  } else if(validUser && validDate && injectMode.equals("both") && !publicCalendarName.equals(EMPTY) 
-			  											&& injectPublicNumber > 0){
+	  } else if(validUser && validDate && injectMode.equals("both") && !publicCalendarName.equals(EMPTY)){			  											
 		  insertEventToPublicCalendar();
 		  initPrivateCalendarCustomize();		  	
 		  log.info("Inject private & public events customize done");
@@ -337,7 +328,6 @@ public class CalendarDataInjector extends DataInjector {
 	  date = EMPTY;
 	  injectedUser = EMPTY;
 	  injectMode = EMPTY;
-	  injectPublicNumber = 0;
 	  publicCalendarName = EMPTY;
   	}
   
@@ -358,11 +348,11 @@ public class CalendarDataInjector extends DataInjector {
 			   					calService.getGroupCalendars(getUserGroups(injectedUser), true, injectedUser);
 	   if (groupCalendars != null) {		     
 		      for (GroupCalendarData g : groupCalendars) {
-		        String groupName = g.getName();
-		        log.info("Group Name=" + groupName);
+//		        String groupName = g.getName();
+//		        log.info("Group Name=" + groupName);
 		        for (org.exoplatform.calendar.service.Calendar c : g.getCalendars()) {
-		        	log.info("public calendar-name=" + c.getName());
-		        	log.info("public calendar-id=" + c.getId());	
+//		        	log.info("public calendar-name=" + c.getName());
+//		        	log.info("public calendar-id=" + c.getId());	
 		        	publicCalendars.add(c);
 		        }
 		      }		  
@@ -476,18 +466,16 @@ public class CalendarDataInjector extends DataInjector {
 		  calendarId = calendar.getId();
 	  }
 	  CalendarEvent event;
-	  for(int i =0; i < injectPublicNumber; i++){
-		  //Save event into public calendar
-		  event = newCalendarEventCustomize(calendarId, "2", CalendarEvent.TYPE_EVENT, true);
-	  	  calService.savePublicEvent(calendarId, event, true);
-	  	
-	  	  // save task into public calendar
-	  	  event = newCalendarEventCustomize(calendarId, "2", CalendarEvent.TYPE_TASK, true);
-	  	  calService.savePublicEvent(calendarId, event, true);	 	
-	  	  
-	  	  eventNumber++;
-	  }	
-    
+	  //Save event into public calendar
+	  event = newCalendarEventCustomize(calendarId, "2", CalendarEvent.TYPE_EVENT, true);
+  	  calService.savePublicEvent(calendarId, event, true);
+  	
+  	  // save task into public calendar
+  	  event = newCalendarEventCustomize(calendarId, "2", CalendarEvent.TYPE_TASK, true);
+  	  calService.savePublicEvent(calendarId, event, true);	 	
+  	  
+  	  eventNumber++;
+  	  
 	  saveHistoryInject();
   }
   
@@ -503,25 +491,6 @@ public class CalendarDataInjector extends DataInjector {
 	  return calendarId;
   }
   
-//  private void initPublicCalendarCustomize() throws Exception{	  
-//	  	CalendarEvent event;
-//	    //Save public calendar
-//	  	Calendar calendar  = newPublicCalendarCustomize();
-//	    calService.savePublicCalendar(calendar, true); 
-//	    
-//	    for(int i =0; i < injectPublicNumber; i++){
-//	    	//Save event
-//	    	event = newCalendarEventCustomize(calendar.getId(), "2", CalendarEvent.TYPE_EVENT, true);
-//		  	calService.savePublicEvent(calendar.getId(), event, true);
-//		  	
-//		  	// save task in public calendar
-//		  	event = newCalendarEventCustomize(calendar.getId(), "2", CalendarEvent.TYPE_TASK, true);
-//		  	calService.savePublicEvent(calendar.getId(), event, true);	 	    	
-//	    }	  	 
-//	  	
-//	  	saveHistoryInject();
-//  }
-
   private void initPrivateCalendar() throws Exception {
     log.info("Inject private datas ....");
     // save setting
@@ -585,7 +554,7 @@ public class CalendarDataInjector extends DataInjector {
 	    //save Event	    
 	    String defaultCalendarId = Utils.getDefaultCalendarId(injectedUser);
 	    Calendar defaultCalendar = calService.getCalendarById(defaultCalendarId);
-	    log.info("initPrivateCalendarCustomize - defaultCalendar=" + defaultCalendar.getName());
+//	    log.info("initPrivateCalendarCustomize - defaultCalendar=" + defaultCalendar.getName());
    	    
     	CalendarEvent event = newCalendarEventCustomize(defaultCalendar.getId(), "0", CalendarEvent.TYPE_EVENT, false);
     	
@@ -758,7 +727,7 @@ public class CalendarDataInjector extends DataInjector {
 				defaultEventCategoryAll = calService.getEventCategory(injectedUser, DEFAULT_EVENTCATEGORY_ID_ALL);
 				categoryEvent.setEventCategoryId(defaultEventCategoryAll.getId());
 			    categoryEvent.setEventCategoryName(defaultEventCategoryAll.getName());
-			    log.info("newCalendarEventCustomize-defaultEventCategoryAll.getName()="+defaultEventCategoryAll.getName());			    
+//			    log.info("newCalendarEventCustomize-defaultEventCategoryAll.getName()="+defaultEventCategoryAll.getName());			    
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

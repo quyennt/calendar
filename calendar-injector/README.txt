@@ -10,4 +10,17 @@ B. How to inject:
 		1. To use default injection:
 				host:port/rest/bench/inject/CalendarDataInjector
 		2. To use injection customized by TQA:
-				host:port/rest/bench/inject/CalendarDataInjector?tqaCustomize=true&date=MM/dd/yyyy
+				2.1.Inject public calendars:
+				host:port/rest/bench/inject/CalendarDataInjector?tqaCustomize=true&injectedUser=userId&createPublicCalendar=true&publicCalendarName=calendarName
+				2.2.Inject private events,tasks: 
+				host:port/rest/bench/inject/CalendarDataInjector?tqaCustomize=true&date=MM/dd/yyyy&injectedUser=userId
+				OR
+				host:port/rest/bench/inject/CalendarDataInjector?tqaCustomize=true&injectMode=private&date=MM/dd/yyyy&injectedUser=userId
+				2.3.Inject public events, tasks in public calendars:
+				host:port/rest/bench/inject/CalendarDataInjector?tqaCustomize=true&injectMode=public&date=MM/dd/yyyy&injectedUser=userId&publicCalendarName=calendarName
+				2.4.Inject public events, tasks in public calendars 
+						AND 
+					private events, tasks into default private calendar:
+				host:port/rest/bench/inject/CalendarDataInjector?tqaCustomize=true&injectMode=both&date=MM/dd/yyyy&injectedUser=userId&publicCalendarName=calendarName
+				
+				In 2.3 and 2.4: if the publicCalendarName does not exist, it will be created.	
