@@ -46,8 +46,6 @@ import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.UserProfile;
 import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.services.security.Identity;
-import org.exoplatform.webui.core.model.SelectOption;
-import org.exoplatform.webui.core.model.SelectOptionGroup;
 
 /**
  * Created by The eXo Platform SAS
@@ -100,7 +98,7 @@ public class CalendarDataInjector extends DataInjector {
 
   private Random                 rand               = new Random();
   
-  private String 	 			 tqaCustomize		= EMPTY;
+//  private String 	 			 tqaCustomize		= EMPTY;
 
   private String 	 			 date				= EMPTY;
   
@@ -108,8 +106,16 @@ public class CalendarDataInjector extends DataInjector {
   
   private String 				 publicCalendarName  = EMPTY;
     
-  private String				 injectedUser		 = EMPTY;
-     
+//  private String				 injectedUser		 = EMPTY;
+  
+  private String				 userPrefix	 		= EMPTY;
+  
+  private int					 fromUser			= 0;
+  
+  private int					 toUser				= 0;
+  
+  private String				 titleWordSplitter	 = " ";
+    
   private boolean				 createPublicCalendar= false;
   
   private int 					 eventNumber		= 1;
@@ -197,48 +203,62 @@ public class CalendarDataInjector extends DataInjector {
 //    }
 //  }
 
+//  @Override
+//  public void inject(HashMap<String, String> queryParams) throws Exception {
+//    log.info("Start inject datas for calendar....");    
+//    setHistoryInject();
+//    
+//    //Implement as VN TQA's requirements   
+//    processParams(queryParams);
+//       
+//    if("true".equals(tqaCustomize)){
+//    	injectCustomize();
+//    	log.info("Inject Customize done!");
+//    
+//    } else if(("false".equals(tqaCustomize))|| (EMPTY.equals(tqaCustomize)) || (null == tqaCustomize)){//end tqa customize
+//       	log.info("Defaul injection");
+//	    if ("all".equals(typeOfInject)) {
+//	      if (currentUser.length() > 0) {
+//	        initPrivateCalendar();
+//	      }
+//	      initPublicCalendar();
+//	    } else if ("public".equals(typeOfInject)) {
+//	      initPublicCalendar();
+//	    } else if (currentUser.length() > 0) {
+//	      initPrivateCalendar();
+//	    }
+//    } else {
+//    	log.info("Nothing injected");
+//    }
+//  }
+  
   @Override
   public void inject(HashMap<String, String> queryParams) throws Exception {
-    log.info("Start inject datas for calendar....");    
-    setHistoryInject();
-    
-    //Implement as VN TQA's requirements   
-    processParams(queryParams);
-       
-    if("true".equals(tqaCustomize)){
-    	injectCustomize();
-    	log.info("Inject Customize done!");
-    
-    } else if(("false".equals(tqaCustomize))|| (EMPTY.equals(tqaCustomize)) || (null == tqaCustomize)){//end tqa customize
-       	log.info("Defaul injection");
-	    if ("all".equals(typeOfInject)) {
-	      if (currentUser.length() > 0) {
-	        initPrivateCalendar();
-	      }
-	      initPublicCalendar();
-	    } else if ("public".equals(typeOfInject)) {
-	      initPublicCalendar();
-	    } else if (currentUser.length() > 0) {
-	      initPrivateCalendar();
-	    }
-    } else {
-    	log.info("Nothing injected");
-    }
-  }
+	    log.info("Start inject datas for calendar....");    
+	    setHistoryInject();
+	    
+	    //Implement as VN TQA's requirements   
+	    processParams(queryParams);
+	    injectCustomize();	   
+  }  
   
   private void processParams(HashMap<String, String> queryParams){
-	    Object paramCumtomize = queryParams.get("tqaCustomize");
+//	    Object paramCumtomize = queryParams.get("tqaCustomize");
 	    Object paramDate = queryParams.get("date");
 	    Object paramMode = queryParams.get("injectMode");
 	    Object paramPublicCalendar = queryParams.get("publicCalendarName");
-	    Object paramInjectedUser = queryParams.get("injectedUser");
+//	    Object paramInjectedUser = queryParams.get("injectedUser");
+	    Object paramUserPrefix = queryParams.get("userPrefix");
+	    Object paramFromUser = queryParams.get("fromUser");
+	    Object paramToUser = queryParams.get("toUser");
+	    Object paramTitleWordSplitter = queryParams.get("titleWordSplitter");
 	    Object paramCreatePublicCalendar = queryParams.get("createPublicCalendar");
 	    
-	    if(paramCumtomize != null){
-	    	tqaCustomize = paramCumtomize.toString().trim();
-	    }
+//	    if(paramCumtomize != null){
+//	    	tqaCustomize = paramCumtomize.toString().trim();
+//	    }
 	    
-	    if(tqaCustomize.equals("true")){
+//	    if(tqaCustomize.equals("true")){
 		    if(paramDate != null){
 		    	date = paramDate.toString().trim();
 		    }
@@ -251,14 +271,26 @@ public class CalendarDataInjector extends DataInjector {
 		    	publicCalendarName = paramPublicCalendar.toString().trim();
 		    }
 		  		    
-		    if(paramInjectedUser != null){
-		    	injectedUser = paramInjectedUser.toString().trim();
+		    if(paramUserPrefix != null){
+		    	userPrefix = paramUserPrefix.toString().trim();
 		    }
+		    
+		    if(paramFromUser != null){
+		    	fromUser = Integer.parseInt(paramFromUser.toString().trim());
+		    }		    
+
+		    if(paramToUser != null){
+		    	toUser = Integer.parseInt(paramToUser.toString().trim());
+		    }
+		    
+		    if(paramTitleWordSplitter != null){
+		    	titleWordSplitter = paramTitleWordSplitter.toString().trim();
+		    }		    
 		    
 		    if(paramCreatePublicCalendar != null){
 		    	createPublicCalendar = Boolean.parseBoolean(paramCreatePublicCalendar.toString().trim());
 		    }		    
-		}
+//		}
   }
   
   private boolean isValidDate(String inputDate, SimpleDateFormat dateFormater) throws Exception{
@@ -274,51 +306,55 @@ public class CalendarDataInjector extends DataInjector {
         return validDate;
   }
   
-  private boolean isValidUser(String userId) throws Exception{
-	  boolean validUser = true;
-	  if(userId.equals(EMPTY)){
-		  log.error("No user to inject");
-		  validUser = false; 
-	  } else {
-		  ExoContainer container = ExoContainerContext.getCurrentContainer();
-		  OrganizationService organizationService = (OrganizationService)container.getComponentInstanceOfType(OrganizationService.class);
-		  UserProfile profile = organizationService.getUserProfileHandler().findUserProfileByName(userId);
-		  if(profile == null){
-			  log.error("Injected User is invalid. Plz check if the user exist!");
-			  validUser = false;
-		  }
-	  }
-	  return validUser;
-  }
+//  private boolean isValidUser(String userId) throws Exception{
+//	  boolean validUser = true;
+//	  if(userId.equals(EMPTY)){
+//		  log.error("No user to inject");
+//		  validUser = false; 
+//	  } else {
+//		  ExoContainer container = ExoContainerContext.getCurrentContainer();
+//		  OrganizationService organizationService = (OrganizationService)container.getComponentInstanceOfType(OrganizationService.class);
+//		  UserProfile profile = organizationService.getUserProfileHandler().findUserProfileByName(userId);
+//		  if(profile == null){
+//			  log.error("Injected User is invalid. Plz check if the user exist!");
+//			  validUser = false;
+//		  }
+//	  }
+//	  return validUser;
+//  }
   
   //Inject as VN TQA's requirements
   private void injectCustomize() throws Exception{
 	
 	  SimpleDateFormat dateFormater = new SimpleDateFormat ("MM/dd/yyyy"); 
+	  List<String> userList  = getUserList();
+	  log.info("injectCustomize - userList = " + userList.size());
+	  
 	  boolean validDate = false;
-	  boolean validUser = isValidUser(injectedUser);
+//	  boolean validUser = isValidUser(injectedUser);
+	  
 	  
 	  if(!createPublicCalendar){
 		  validDate = isValidDate(date, dateFormater);
 	  }
 	  
 	  //Inject public calendars	  
-	  if(validUser && createPublicCalendar && (!publicCalendarName.equals(EMPTY))){
-		  insertPublicCalendar();
+	  if(createPublicCalendar && (!publicCalendarName.equals(EMPTY))){
+		  injectPublicCalendar(userList);
 		  log.info("Inject public calendar customize done!");
-	  } else if(validUser && validDate && (injectMode.equals("private") || injectMode.equals(EMPTY)) 
+	  } else if(validDate && (injectMode.equals("private") || injectMode.equals(EMPTY)) 
 			  									&& publicCalendarName.equals(EMPTY)){
 		  //Inject private events into default calendar
-		  initPrivateCalendarCustomize();
+		  injectPrivateEvents(userList);
 		  log.info("Inject private events customize done!");
 		  //Inject events into public calendars
-	  } else if(validUser && validDate && injectMode.equals("public") && !publicCalendarName.equals(EMPTY)){
-		  insertEventToPublicCalendar();
+	  } else if(validDate && injectMode.equals("public") && !publicCalendarName.equals(EMPTY)){
+		  injectPublicEvents(userList);
 		  log.info("Inject public events customize done");
 		  //Inject event to both private & public calendars
-	  } else if(validUser && validDate && injectMode.equals("both") && !publicCalendarName.equals(EMPTY)){			  											
-		  insertEventToPublicCalendar();
-		  initPrivateCalendarCustomize();		  	
+	  } else if(validDate && injectMode.equals("both") && !publicCalendarName.equals(EMPTY)){			  											
+		  injectPrivateEvents(userList);
+		  injectPublicEvents(userList);	  	
 		  log.info("Inject private & public events customize done");
 	  } else {
 		  log.info("Inject customize - invalid parameter(s)");
@@ -326,10 +362,45 @@ public class CalendarDataInjector extends DataInjector {
 	  
 	  createPublicCalendar = false;
 	  date = EMPTY;
-	  injectedUser = EMPTY;
+//	  injectedUser = EMPTY;
 	  injectMode = EMPTY;
 	  publicCalendarName = EMPTY;
+	  fromUser = 0;
+	  toUser = 0;
+	  titleWordSplitter = " ";
+	  userPrefix  = EMPTY;
   	}
+  
+  private void injectPublicCalendar(List<String> userList) throws Exception{	  
+	  for(String user:userList){
+		  insertPublicCalendar(user);		  
+	  }
+  }
+  
+  private void injectPrivateEvents(List<String> userList) throws Exception{
+	    for(String user:userList){
+		  initPrivateCalendarCustomize(user);
+		}
+  }  
+  
+  private void injectPublicEvents(List<String> userList) throws Exception{
+	   for(String user:userList){
+		  insertEventToPublicCalendar(user);		  
+	  }
+  }  
+  
+   
+  //Generate userlist from params
+  private List<String> getUserList(){
+	List<String> userList = new ArrayList<String>();
+	String user = userPrefix;
+	for(int i = fromUser; i <= toUser; i++){
+		user = userPrefix+i;
+		userList.add(user);
+	}
+	
+	return userList;
+  }
   
   /**
    * Gets all the group calendar data of current user
@@ -342,10 +413,11 @@ public class CalendarDataInjector extends DataInjector {
    * @throws Exception
    * @see GroupCalendarData
    */
-  private List<Calendar> getGroupCalendars() throws Exception{
+  private List<Calendar> getGroupCalendars(String user) throws Exception{
 	   List<Calendar> publicCalendars = new ArrayList<Calendar>();
+	   
 	   List<GroupCalendarData> groupCalendars = 
-			   					calService.getGroupCalendars(getUserGroups(injectedUser), true, injectedUser);
+			   					calService.getGroupCalendars(getUserGroups(user), true, user);
 	   if (groupCalendars != null) {		     
 		      for (GroupCalendarData g : groupCalendars) {
 //		        String groupName = g.getName();
@@ -450,38 +522,41 @@ public class CalendarDataInjector extends DataInjector {
     saveHistoryInject();
   }
   
-  private void insertPublicCalendar() throws Exception{
-	  	Calendar calendar  = newPublicCalendarCustomize();
+  private void insertPublicCalendar(String user) throws Exception{
+	  	Calendar calendar  = newPublicCalendarCustomize(user);
 	    calService.savePublicCalendar(calendar, true); 
 	    
 	    saveHistoryInject();
+	    log.info("insertPublicCalendar for user " + user + " successfully");
   }
   
-  private void insertEventToPublicCalendar() throws Exception{
-	  String calendarId = getPublicCalendarIdByName(publicCalendarName);
+  private void insertEventToPublicCalendar(String user) throws Exception{
+	  String calendarId = getPublicCalendarIdByName(publicCalendarName, user);
 	  // Create new if not found
 	  if(calendarId == null){
-		  Calendar calendar  = newPublicCalendarCustomize();
+		  Calendar calendar  = newPublicCalendarCustomize(user);
 		  calService.savePublicCalendar(calendar, true);
 		  calendarId = calendar.getId();
 	  }
 	  CalendarEvent event;
 	  //Save event into public calendar
-	  event = newCalendarEventCustomize(calendarId, "2", CalendarEvent.TYPE_EVENT, true);
+	  event = newCalendarEventCustomize(calendarId, "2", CalendarEvent.TYPE_EVENT, true,user);
   	  calService.savePublicEvent(calendarId, event, true);
   	
   	  // save task into public calendar
-  	  event = newCalendarEventCustomize(calendarId, "2", CalendarEvent.TYPE_TASK, true);
+  	  event = newCalendarEventCustomize(calendarId, "2", CalendarEvent.TYPE_TASK, true,user);
   	  calService.savePublicEvent(calendarId, event, true);	 	
   	  
-  	  eventNumber++;
+//  	  eventNumber++;
   	  
 	  saveHistoryInject();
+	  
+	  log.info("insertEventToPublicCalendar for user " + user + " successfully");
   }
   
-  private String getPublicCalendarIdByName(String calendarName) throws Exception{
+  private String getPublicCalendarIdByName(String calendarName, String user) throws Exception{
 	  String calendarId = null;
-	  List<Calendar> publicCalendars = getGroupCalendars();	  
+	  List<Calendar> publicCalendars = getGroupCalendars(user);	  
 	  for(Calendar calendar:publicCalendars){
 		  if(calendarName.equals(calendar.getName())){
 			  calendarId = calendar.getId();
@@ -541,8 +616,8 @@ public class CalendarDataInjector extends DataInjector {
     saveHistoryInject();
   }
 
-  private void initPrivateCalendarCustomize() throws Exception {
-	    log.info("Inject private datas customize....");    	
+  private void initPrivateCalendarCustomize(String injectedUser) throws Exception {
+	    log.info("Inject private datas for user " + injectedUser);    	
 	    // save setting
 	    try {	      
 	      setting = calService.getCalendarSetting(injectedUser);	      	      
@@ -556,19 +631,21 @@ public class CalendarDataInjector extends DataInjector {
 	    Calendar defaultCalendar = calService.getCalendarById(defaultCalendarId);
 //	    log.info("initPrivateCalendarCustomize - defaultCalendar=" + defaultCalendar.getName());
    	    
-    	CalendarEvent event = newCalendarEventCustomize(defaultCalendar.getId(), "0", CalendarEvent.TYPE_EVENT, false);
+    	CalendarEvent event = newCalendarEventCustomize(defaultCalendar.getId(), "0", CalendarEvent.TYPE_EVENT, false,injectedUser);
     	
 //    	calService.saveUserEvent(currentUser, defaultCalendar.getId(), event, true);
     	calService.saveUserEvent(injectedUser, defaultCalendar.getId(), event, true);
     	 
     	//Save task
-    	event = newCalendarEventCustomize(defaultCalendar.getId(), "0", CalendarEvent.TYPE_TASK, false);
+    	event = newCalendarEventCustomize(defaultCalendar.getId(), "0", CalendarEvent.TYPE_TASK, false,injectedUser);
 
     	calService.saveUserEvent(injectedUser, defaultCalendar.getId(), event, true);    	 
 
     	eventNumber++;
     	//save history inject
     	saveHistoryInject();
+    	
+    	log.info("initPrivateCalendarCustomize for user " + injectedUser + " successfully");    
 	 }  
   
   private List<EventCategory> findEventCategorys() throws Exception {
@@ -653,7 +730,7 @@ public class CalendarDataInjector extends DataInjector {
     return calendar;
   }
   
-  private Calendar newPublicCalendarCustomize() {
+  private Calendar newPublicCalendarCustomize(String injectedUser) {
 	    Calendar calendar = new Calendar();
 //	    calendar.setCalendarOwner(currentUser);
 	    calendar.setCalendarOwner(injectedUser);
@@ -713,18 +790,18 @@ public class CalendarDataInjector extends DataInjector {
     return categoryEvent;
   }
   
-  private CalendarEvent newCalendarEventCustomize(String calendarId, String CalType, String type, boolean isPublic) {
+  private CalendarEvent newCalendarEventCustomize(String calendarId, String CalType, String type, boolean isPublic, String user) {
 	    CalendarEvent categoryEvent = new CalendarEvent();
 	    categoryEvent.setCalendarId(calendarId);
 	    categoryEvent.setCalType(CalType);
-	    categoryEvent.setDescription(injectedUser + " Event");
+	    categoryEvent.setDescription(user + " Event");
 	    if (!isPublic) {
 //	      EventCategory eventCategory = randomEventCategory();
 //	      categoryEvent.setEventCategoryId(eventCategory.getId());
 //	      categoryEvent.setEventCategoryName(eventCategory.getName());
 	    	EventCategory defaultEventCategoryAll;
 	     	try {
-				defaultEventCategoryAll = calService.getEventCategory(injectedUser, DEFAULT_EVENTCATEGORY_ID_ALL);
+				defaultEventCategoryAll = calService.getEventCategory(user, DEFAULT_EVENTCATEGORY_ID_ALL);
 				categoryEvent.setEventCategoryId(defaultEventCategoryAll.getId());
 			    categoryEvent.setEventCategoryName(defaultEventCategoryAll.getName());
 //			    log.info("newCalendarEventCustomize-defaultEventCategoryAll.getName()="+defaultEventCategoryAll.getName());			    
@@ -757,11 +834,11 @@ public class CalendarDataInjector extends DataInjector {
 	    categoryEvent.setToDateTime(toTime);
 
 	    categoryEvent.setLocation(DEFAULT_LOCATION);	    
-	    categoryEvent.setMessage(injectedUser + " Event");
+	    categoryEvent.setMessage(user + " Event");
 
 //	    categoryEvent.setInvitation(new String[] { EMPTY });
-	    categoryEvent.setParticipant(new String[] { injectedUser });
-	    categoryEvent.setParticipantStatus(new String[] { injectedUser + ":" });
+	    categoryEvent.setParticipant(new String[] { user });
+	    categoryEvent.setParticipantStatus(new String[] { user + ":" });
 	    categoryEvent.setPriority(CalendarEvent.PRIORITY[rand.nextInt(CalendarEvent.PRIORITY.length)]);
 	    categoryEvent.setSendOption(CalendarSetting.ACTION_NEVER);
 	    categoryEvent.setStatus(EMPTY);
@@ -772,15 +849,15 @@ public class CalendarDataInjector extends DataInjector {
 	    //Event title
 	    if (!isPublic){
 		    if(type == CalendarEvent.TYPE_TASK){
-		    	categoryEvent.setSummary(injectedUser + "_Task_Private_" + eventNumber);
+		    	categoryEvent.setSummary(user + titleWordSplitter + "Task" + titleWordSplitter + "Private" + titleWordSplitter + eventNumber);
 		    } else {
-		    	categoryEvent.setSummary(injectedUser + "_Event_Private_" + eventNumber);
+		    	categoryEvent.setSummary(user + titleWordSplitter + "Event" + titleWordSplitter + "Private" + titleWordSplitter + eventNumber);
 		    }
 	    } else {
 		    if(type == CalendarEvent.TYPE_TASK){
-		    	categoryEvent.setSummary(injectedUser + "_Task_Public_" + eventNumber);
+		    	categoryEvent.setSummary(user + titleWordSplitter + "Task" + titleWordSplitter + "Public" + titleWordSplitter + eventNumber);
 		    } else {
-		    	categoryEvent.setSummary(injectedUser + "_Event_Public_" + eventNumber);
+		    	categoryEvent.setSummary(user + titleWordSplitter + "Event" + titleWordSplitter + "Public" + titleWordSplitter + eventNumber);
 		    }	    	
 	    }
 	    categoryEvent.setPrivate(!isPublic);
